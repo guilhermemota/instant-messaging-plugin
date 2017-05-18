@@ -592,9 +592,17 @@ public abstract class IMPublisher extends Notifier implements BuildStep, MatrixA
 		{
 		    try {
 		        log(buildListener, "Sending notification to: " + target.toString());
+                if  (target.toString().contains("$")) {
+                    String[] split = target.toString().split("@");
+                    String expandedVariable = build.getEnvironment(buildListener).expand(split[0]);
+                    String domain = "@" + split[1];
+
+                    target = getIMDescriptor().getIMMessageTargetConverter().fromString(expandedVariable + domain);
+                    log(buildListener, "(expanded) Sending notification to: " + target.toString());
+                }
 		        sendNotification(msg, target, buildListener);
-		    } catch (RuntimeException t) {
-		        log(buildListener, "There was an error sending notification to: " + target.toString() + "\n" + ExceptionHelper.dump(t));
+		    } catch (IMMessageTargetConversionException e) {
+		        log(buildListener, "There was an error sending notification to: " + target.toString() + "\n" + ExceptionHelper.dump(e));
 		    }
 		}
 	}
